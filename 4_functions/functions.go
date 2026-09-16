@@ -64,5 +64,4 @@ func main() {
 	calc = ticketPrice
 
 	fmt.Println(calc(1, 2))
-
 }
