@@ -3,3 +3,6 @@ vars
 
 switch
     в go break не нужен
+
+slices 
+    слайс - это окно поверх массива
