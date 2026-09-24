@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -81,6 +83,49 @@ func main() {
 	fmt.Println(newUserID())  // USER-1
 	fmt.Println(newUserID())  // USER-2
 	fmt.Println(newUserID())  // USER-3
+
+	fmt.Println("\n=== Callback (sort.Slice) ===")
+
+	ratings := []float64{7.2, 9.1, 6.5, 8.8, 5.3}
+	sort.Slice(ratings, func(i, j int) bool {
+		return ratings[i] > ratings[j] // по убыванию
+	})
+	fmt.Println("Отсортированно:", ratings)
+
+	fmt.Println("\n=== Функция высшего порядка ===")
+
+	applyDisount := makeDiscountApplier(0.20)
+	fmt.Printf("Со скидкой 20%%: %.2f\n", applyDisount(1000))
+
+	titles := []string{"Матрица", "Начало", "Дюна"}
+	fmt.Println("Капс:", transformStrings(titles, strings.ToUpper))
+
+	benchmarkOperation("загрузка", func() {
+		time.Sleep(50 * time.Millisecond)
+	})
+}
+
+// makeDiscountApplier возвращает функцию, применяющую скидку.
+func makeDiscountApplier(rate float64) func(float64) float64 {
+	return func(price float64) float64 {
+		return price * (1 - rate)
+	}
+}
+
+// transformStrings приименяет функцию к каждой строке.
+func transformStrings(items []string, fn func(string) string) []string {
+	result := make([]string, len(items))
+	for i, item := range items {
+		result[i] = fn(item)
+	}
+	return result
+}
+
+// benchmarkOperation замеряет время выполнения функции.
+func benchmarkOperation(name string, op func()) {
+	start := time.Now()
+	op()
+	fmt.Printf("%s: %v\n", name, time.Since(start))
 }
 
 // makeIDGenerator создаёт генератор уникальных ID c заданным префиксом
