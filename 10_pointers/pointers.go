@@ -53,9 +53,9 @@ func main() {
 	var nilPtr *int
 	fmt.Println("nilPtr == nil:", nilPtr == nil)
 	// _ = *nilPtr // panic!
-	if nilPtr != nil {
-		fmt.Println(*nilPtr)
-	}
+	// if nilPtr != nil {
+	// 	fmt.Println(*nilPtr)
+	// }
 
 	fmt.Println("\n=== Опциональные значения ===")
 
