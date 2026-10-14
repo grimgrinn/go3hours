@@ -29,6 +29,30 @@ func (p PushNotification) ChannelName() string {
 	return "push\n"
 }
 
+type Exporter interface {
+	Export() string
+}
+
+type CSVExpot struct {
+	Field string
+}
+
+func (c CSVExpot) Export() string {
+	return fmt.Sprintf("CSVExport %s", c.Field)
+}
+
+type JSONExport struct {
+	Field string
+}
+
+func (j JSONExport) Export() string {
+	return fmt.Sprintf("JSONExxport %s", j.Field)
+}
+
+func RunExport(e Exporter) {
+	fmt.Println(e.Export())
+}
+
 func main() {
 	emailn := EmailNotification{Message: "email"}
 	pushn := PushNotification{Message: "push"}
@@ -38,4 +62,10 @@ func main() {
 	for _, n := range notifiers {
 		fmt.Println(n.ChannelName(), n.Send())
 	}
+
+	cex := CSVExpot{Field: "CSV"}
+	jex := JSONExport{Field: "JSON"}
+
+	RunExport(cex)
+	RunExport(jex)
 }
