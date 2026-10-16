@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -22,6 +23,16 @@ func (vc *ViewCounter) Value() int {
 	vc.mu.Lock()
 	defer vc.mu.Unlock()
 	return vc.count
+}
+
+// worker - воркер, обрабатывающий задачи из канала jobs.
+func worker(id int, jobs <-chan string, results chan<- string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for film := range jobs {
+		time.Sleep(time.Duration(rand.Intn(50)) * time.Millisecond)
+		results <- fmt.Sprintf("Воркер %d обработал: %s", id, film)
+	}
 }
 
 func main() {
@@ -168,4 +179,78 @@ func main() {
 	wg2.Wait()
 	fmt.Printf(" Просмотров (100 горутин): %d\n", counter.Value())
 
+	fmt.Println("=======Worker Pool=========")
+
+	filmList := []string{"Дюна", "Иатрица", "Довод", "Начало", "Аватар"}
+
+	jobs := make(chan string)
+	results := make(chan string)
+
+	var wg3 sync.WaitGroup
+
+	// Запускаем три воркера
+	for w := 1; w <= 3; w++ {
+		wg3.Add(1)
+		go worker(w, jobs, results, &wg3)
+	}
+	// Отправляем задачи
+	go func() {
+		for _, film := range filmList {
+			jobs <- film
+		}
+		close(jobs) // сигнал воркерам, что задач больше нет
+	}()
+	// Закрываем results только после завершения всех воркеров
+	go func() {
+		wg3.Wait()
+		close(results)
+	}()
+	// Собираем результаты
+	for result := range results {
+		fmt.Println(result)
+	}
+
+	fmt.Println("====Context с таймаутом====")
+
+	// Создаем контекст с таймаутом 150 мс
+	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
+	defer cancel() // освобождаем ресурсы после завершения
+
+	resultCh := make(chan string)
+
+	go func() {
+		time.Sleep(100 * time.Millisecond) // "долгая" операция
+		resultCh <- "Рекомендации готовы!"
+	}()
+
+	select {
+	case res := <-resultCh:
+		fmt.Println(res)
+	case <-ctx.Done():
+		fmt.Println("Отмена:", ctx.Err())
+	}
+
+	fmt.Println("\n=== Context с отменой ===")
+
+	ctx2, cancel2 := context.WithCancel(context.Background())
+	var wg4 sync.WaitGroup
+	wg.Add(1)
+
+	// Горутина должна реагировать на отмену через ctx.Done()
+	go func(ctx context.Context) {
+		defer wg4.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				fmt.Println("Стриминг остановлен")
+				return
+			default:
+				fmt.Println("Стрими фильм...")
+				time.Sleep(50 * time.Millisecond)
+			}
+		}
+	}(ctx2)
+	time.Sleep(120 * time.Millisecond)
+	cancel2() // отменяем - горутина завершится
+	wg.Wait()
 }
