@@ -7,6 +7,23 @@ import (
 	"time"
 )
 
+// ViewCounter - потокобезопасный счетчик просмотров
+type ViewCounter struct {
+	mu    sync.Mutex
+	count int
+}
+
+func (vc *ViewCounter) Increment() {
+	vc.mu.Lock()
+	defer vc.mu.Unlock()
+	vc.count++
+}
+func (vc *ViewCounter) Value() int {
+	vc.mu.Lock()
+	defer vc.mu.Unlock()
+	return vc.count
+}
+
 func main() {
 	// Пример: запуск нескольких горутин
 	fmt.Println("=== Горутины ===")
@@ -110,4 +127,45 @@ func main() {
 	// Ждем сигнал
 	<-done
 	fmt.Println("main: получили сигнал завершения")
+
+	fmt.Println("=======Select=========")
+
+	recomendations := make(chan string)
+	go func() {
+		time.Sleep(50 * time.Millisecond)
+		recomendations <- "Интерстеллар"
+	}()
+
+	select {
+	case movie := <-recomendations:
+		fmt.Println(" Рекомендации:", movie)
+	case <-time.After(200 * time.Millisecond):
+		fmt.Println(" Таймаут! Сервис рекомендаций не ответил")
+	}
+
+	// Неблокирующий select с default
+	ch3 := make(chan string)
+	select {
+	case msg := <-ch3:
+		fmt.Println(msg)
+	default:
+		fmt.Println(" Нет данных - идем дальше")
+	}
+
+	fmt.Println("========Sync.Mutex=======")
+
+	counter := &ViewCounter{}
+	var wg2 sync.WaitGroup
+
+	// Запускаем 100 горутин, каждая увеличивает счетчик
+	for i := 0; i < 100; i++ {
+		wg2.Add(1)
+		go func() {
+			defer wg2.Done()
+			counter.Increment()
+		}()
+	}
+	wg2.Wait()
+	fmt.Printf(" Просмотров (100 горутин): %d\n", counter.Value())
+
 }
