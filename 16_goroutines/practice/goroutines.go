@@ -13,7 +13,13 @@ func checkEpisode(title string, delay int, wg *sync.WaitGroup) {
 	fmt.Printf("%s готов к публикации\n", title)
 }
 
+func transcodeVideo(name string, ch chan string) {
+	time.Sleep(time.Duration(rand.Intn(100)) * time.Microsecond)
+	ch <- fmt.Sprintf("%s обработан заебись", name)
+}
+
 func main() {
+	fmt.Println("1")
 	episodes := []string{"Episode1", "Desert", "Shitty shit", "Asshole world"}
 	var wg sync.WaitGroup
 
@@ -23,4 +29,29 @@ func main() {
 	}
 	wg.Wait()
 	fmt.Println("все эпизоды проверены")
+
+	fmt.Println("2")
+	videos := []string{"Movie", "Sex", "Shit", "Govno", "Humor", "Comedy"}
+
+	channel := make(chan string)
+	var wg2 sync.WaitGroup
+
+	for _, video := range videos {
+		wg2.Add(1)
+
+		go func(v string) {
+			defer wg2.Done()
+
+			transcodeVideo(v, channel)
+		}(video)
+	}
+
+	go func() {
+		wg2.Wait()
+		close(channel)
+	}()
+
+	for obrabotannoe_video := range channel {
+		fmt.Println(obrabotannoe_video)
+	}
 }
