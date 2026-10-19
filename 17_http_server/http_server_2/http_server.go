@@ -40,7 +40,6 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(
 		context.Background(), syscall.SIGINT, syscall.SIGTERM)
-
 	defer stop()
 	<-ctx.Done()
 
@@ -48,7 +47,6 @@ func main() {
 
 	shutdownCtx, cancel := context.WithTimeout(
 		context.Background(), 10*time.Second)
-
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {

@@ -106,3 +106,7 @@ http-server
     Middleware - это функция, которая принимает http.Handler и возвращает http.Handler.
 
     CORS - механизм, который разрешает или запрещает запросы между разными доменами.
+
+database
+    pgx - библиотека для Postgres
+    Pgxpool - пул соеденений с PostgresSQL для библиотеки pgx
