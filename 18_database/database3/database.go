@@ -26,7 +26,7 @@ func (r *postgresRepo) TransferMoney(ctx context.Context, fromID, toID int64, am
 	}
 
 	_, err = tx.Exec(ctx,
-		"UPDATE accounts SET balance + $1 WHERE id = $2",
+		"UPDATE accounts SET balance = balance + $1 WHERE id = $2",
 		amount, toID,
 	)
 	if err != nil {
